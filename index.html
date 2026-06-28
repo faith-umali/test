@@ -123,6 +123,7 @@ button {
 <script>
 
 const API_KEY = "f0b9a524d07449c474ea5b8549fa74dd";
+    const url = `https://api.openweathermap.org/data/2.5/forecast?qlat=${city}&appid=${API_KEY}&units=metric`;
 
 // 🌍 GET CURRENT LOCATION
 navigator.geolocation.getCurrentPosition(pos => {
