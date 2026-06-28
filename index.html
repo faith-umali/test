@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKYCAST</title>
+
+<style>
+body {
+    margin:0;
+    font-family: Arial;
+    background: linear-gradient(135deg,#74b9ff,#dfe6e9);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
+
+.app {
+    width:360px;
+    background:white;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+.header {
+    text-align:center;
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+.search {
+    display:flex;
+    gap:10px;
+}
+
+input {
+    flex:1;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid #ccc;
+}
+
+button {
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    background:#0984e3;
+    color:white;
+    cursor:pointer;
+}
+
+.center {
+    text-align:center;
+    margin-top:15px;
+}
+
+.temp {
+    font-size:45px;
+    font-weight:bold;
+}
+
+.grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:15px;
+}
+
+.box {
+    background:#f1f2f6;
+    padding:10px;
+    border-radius:10px;
+    text-align:center;
+}
+
+.forecast {
+    display:flex;
+    justify-content:space-between;
+    margin-top:10px;
+    font-size:13px;
+}
+
+.tip {
+    margin-top:15px;
+    background:#ffeaa7;
+    padding:10px;
+    border-radius:10px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+    <div class="header">🌤 SKYCAST</div>
+
+    <div class="search">
+        <input id="cityInput" placeholder="Search City">
+        <button onclick="searchCity()">🔎</button>
+    </div>
+
+    <div class="center">
+        <h3 id="city">Loading location...</h3>
+        <div class="temp" id="temp">--°C</div>
+        <p id="desc">---</p>
+    </div>
+
+    <div class="grid">
+        <div class="box">💧 Humidity<br><b id="humidity">--</b></div>
+        <div class="box">🌬 Wind<br><b id="wind">--</b></div>
+        <div class="box">🌡 Feels<br><b id="feels">--</b></div>
+        <div class="box">👁 Visibility<br><b id="visibility">--</b></div>
+    </div>
+
+    <div class="forecast" id="forecast"></div>
+
+    <div class="tip">💡 Today's Tip: Check weather before going out!</div>
+</div>
+
+<script>
+
+const API_KEY = "f0b9a524d074ea5b8549fa74dd";
+
+// 🌍 GET CURRENT LOCATION
+navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    getWeatherByCoords(lat, lon);
+});
+
+// 🌤 WEATHER BY GPS
+async function getWeatherByCoords(lat, lon) {
+
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    updateUI(data);
+
+    getForecast(lat, lon);
+}
+
+// 🔎 SEARCH CITY
+async function searchCity() {
+    const city = document.getElementById("cityInput").value;
+
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    updateUI(data);
+
+    getForecast(data.coord.lat, data.coord.lon);
+}
+
+// 🌤 UPDATE UI
+function updateUI(data) {
+
+    document.getElementById("city").innerText =
+        data.name + ", " + data.sys.country;
+
+    document.getElementById("temp").innerText =
+        Math.round(data.main.temp) + "°C";
+
+    document.getElementById("desc").innerText =
+        data.weather[0].description;
+
+    document.getElementById("humidity").innerText =
+        data.main.humidity + "%";
+
+    document.getElementById("wind").innerText =
+        data.wind.speed + " km/h";
+
+    document.getElementById("feels").innerText =
+        Math.round(data.main.feels_like) + "°C";
+
+    document.getElementById("visibility").innerText =
+        (data.visibility / 1000) + " km";
+}
+
+// 📅 5-DAY FORECAST
+async function getForecast(lat, lon) {
+
+    const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    let html = "";
+
+    for (let i = 0; i < 5; i++) {
+        const item = data.list[i * 8];
+
+        html += `
+        <div>
+            ${item.weather[0].main}<br>
+            ${Math.round(item.main.temp)}°
+        </div>`;
+    }
+
+    document.getElementById("forecast").innerHTML = html;
+}
+
+</script>
+
+</body>
+</html>
